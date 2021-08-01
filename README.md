@@ -1,6 +1,12 @@
 # Subnautica-Base-Generator--Blender-Addon-
 Blender Addon That Creates A Base From Videogame "Subnautica" From A Skeleton Mesh
 
+REQUIRED PACKAGES:
+	EasyBPY ( follow the instructions on https://curtisholt.online/easybpy)
+	bmesh
+	mathutils
+	math
+	regex
 
 HOW TO USE:
 
