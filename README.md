@@ -35,3 +35,9 @@ Blender Addon That Creates A Base From Videogame "Subnautica" From A Skeleton Me
 	In the "Object" menu in the top left, select the option labeled "Generate Base" in the dropdown (It will appear towards the bottom of the dropdown).
 	Navigate to where you downloaded "subnauticabaseparts.blend", select it, and click "Generate Base".
 	The process will take a couple of seconds to complete, depending on the size of the skeleton.
+
+#### Example of a good skeleton:
+![image](https://user-images.githubusercontent.com/45775235/127783494-8259f98b-e35f-43bb-a223-9170db2ea2d8.png)
+
+#### Example of a bad skeleton:
+![image](https://user-images.githubusercontent.com/45775235/127783549-c988fad1-48cd-4c51-a3ad-b6c3f0339a09.png)
