@@ -3,10 +3,6 @@ Blender Addon That Creates A Base From Videogame "Subnautica" From A Skeleton Me
 
 REQUIRED PACKAGES:
 	EasyBPY ( follow the instructions on https://curtisholt.online/easybpy)
-	bmesh
-	mathutils
-	math
-	regex
 
 HOW TO USE:
 
