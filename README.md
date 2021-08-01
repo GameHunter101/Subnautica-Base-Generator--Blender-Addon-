@@ -10,7 +10,7 @@ STEP 1:
 	Download "Subnautica_Base_Generator.py" and "subnauticabaseparts.blend". If you want an example of how a skeleton should look like, download "blender addon.blend".
 
 STEP 2:
-	With blender open, navigate to the "Edit" tab in the top left, then select "Preferences" from the dropdown menu.
+	With blender open, navigate to the "Edit" tab in the top left, then select "Preferences" from the dropdown menu. /n
 	Click on the "Add-ons" tab on the left side of the "Blender Preferences" window.
 	Towards the top right corner of the window, select the button labeled "Install...".
 	Navigate in the newly opened file browser to where you installed "Subnautica_Base_Generator.py", select the file, and click "Install Add-on".
