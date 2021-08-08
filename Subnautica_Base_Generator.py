@@ -1,4 +1,3 @@
-
 bl_info = {
     "name": "Subnautica Base Generator",
     "author": "Lior Carmeli",
@@ -26,6 +25,7 @@ from bpy.props import(
     PointerProperty,
     IntProperty,
     BoolProperty,
+    EnumProperty,
 )
 from bpy_extras.io_utils import ImportHelper
 import bmesh
@@ -35,31 +35,201 @@ from mathutils.bvhtree import BVHTree
 import math
 import os
 import re
+import random
+from bpy.types import Operator
+from bpy.utils import register_class, unregister_class
+import gc
+import sys
+import tracemalloc
 
 FILEPATH = ""
 
-
-class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
+class GENProperties(PropertyGroup):
+    size_global : IntProperty(
+        name = "Size",
+        description = "Size of base",
+        default = 20
+    )
     
-    bl_label = "Generate Base"
-    bl_idname = "object.generate_base"
-    bl_description = "Generates a Subnautica base from a base mesh"
-    bl_space_type = "VIEW_3D"
-    bl_region_types = "UI"
+    auto_base : BoolProperty(
+        name = "Autogen",
+        description = "Automatically generate a base after generating a skeleton",
+        default = False
+    )
+    
+    auto_parent : BoolProperty(
+        name = "Autoprnt",
+        description = "Automatically parent base parts to skeleton",
+        default = True
+    )
+    
+    filepath_global : StringProperty(
+        name = "filepath_string",
+        description = "Filepath for base part",
+        default = ""
+    )
+    
+    import_quality : EnumProperty(
+        name  = "Parts Quality",
+        description = "Select the quality of the imports (high, medium, low)",
+        items = [
+            ("HIGH_QUALITY", "High Quality", ""),
+            ("MEDIUM_QUALITY", "Medium Quality", ""),
+            ("LOW_QUALITY", "Low Quality", "")
+        ],
+        default = "MEDIUM_QUALITY"
+    )
+
+
+    
+
+class TEST_PT_panel(Panel):
+    bl_idname = 'TEST_PT_panel'
+    bl_label = 'Subnautica Base Generator'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Base Gen'
+    
+    
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        gen_tool = scene.gen_tool
+        
+        box = layout.box()
+        col = box.column()
+        row = col.row(align = True)
+        
+        row.operator("gen.open_filebrowser", text="Select Filepath")
+        row = col.row(align = True)
+        row.operator('test.test_op', text='Base Gen').action = 'BASE_GEN'
+        row = col.row(align = True)
+        row.operator('test.test_op', text='Skel Gen').action = 'SKEL_GEN'
+        row = col.row(align = True)
+        row.prop(gen_tool, "size_global", text="Base Size")
+        row = col.row(align = True)
+        row.prop(gen_tool, "auto_base", text="Automatically Generate Base")
+        row = col.row(align = True)
+        row.prop(gen_tool, "auto_parent", text="Automatically Parent To Skeleton")
+        row = col.row(align = True)
+        row.prop(gen_tool,"import_quality", text = "")
+        row = col.row(align = True)
+
+
+class OT_OpenFileBrowser(Operator, ImportHelper):
+    bl_idname = "gen.open_filebrowser"
+    bl_label = "Get file"
+    filter_glob : StringProperty(
+        default = "*.blend",
+        options={"HIDDEN"}
+    )
+
+    
+    def execute(self, context):
+        scene = context.scene
+        gen_tool = scene.gen_tool
+        gen_tool.filepath_global = self.filepath
+        global FILEPATH
+        FILEPATH = gen_tool.filepath_global
+        return{"FINISHED"}
+
+
+class TEST_OT_test_op(Operator):
+    bl_idname = 'test.test_op'
+    bl_label = 'Test'
+    bl_description = 'Test'
     bl_options = {'REGISTER', 'UNDO'}
     
-    filter_glob: StringProperty(
-    default = "*.blend",
-    options = {"HIDDEN"}
+    size = 20
+    
+    action: EnumProperty(
+        items=[
+            ('BASE_GEN', 'base gen', 'base gen'),
+            ('SKEL_GEN', 'skel gen', 'skel gen')
+        ]
     )
+
     def execute(self, context):
+        if self.action == 'BASE_GEN':
+            self.base_gen(context)
+        if self.action == 'SKEL_GEN':
+            self.skel_gen(context, self)
+        return {'FINISHED'}
+    
+    def skel_gen(x,context, self):
+        
+        scene = context.scene
+        gen_tool = scene.gen_tool
+        
+        
+        # Variables
+        obj = ao()
+        previous = 2
+
+        def extrude(direction):
+            
+            dirVec = Vector((0,0,0))
+            
+            if direction == 0:
+                dirVec = Vector((1,0,0))
+            if direction == 1:
+                dirVec = Vector((-1,0,0))
+            if direction == 2:
+                dirVec = Vector((0,1,0))
+            if direction == 3:
+                dirVec = Vector((0,-1,0))
+            
+            bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":dirVec})
+
+
+        def make_skeleton(previous_number):
+            if obj.mode != "EDIT":
+                bpy.ops.object.mode_set(mode="EDIT", toggle=False)
+            
+            bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
+            bpy.ops.mesh.select_all(action = "SELECT")
+            bpy.ops.mesh.merge(type="COLLAPSE")
+            random_direction = 0
+            for i in range(gen_tool.size_global):
+                random_direction = random.randint(0,3)
+                if random_direction == previous_number:
+                    while random_direction == previous_number:
+                        random_direction = random.randint(0,3)
+                extrude(random_direction)
+                previous_number = random_direction
+            bpy.ops.mesh.select_all(action = "SELECT")
+            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.dissolve_limited()
+            bpy.ops.object.mode_set(mode="OBJECT", toggle=False)
+            select_object(obj, True)
+        make_skeleton(previous)
+        
+        if gen_tool.auto_base == True:
+            self.base_gen(context)
+        
+        
+        def sizeof_fmt(num, suffix='B'):
+            for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+                if abs(num) < 1024.0:
+                    return "%3.1f %s%s" % (num, unit, suffix)
+                num /= 1024.0
+            return "%.1f %s%s" % (num, 'Yi', suffix)
+
+        for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
+                                 key= lambda x: -x[1])[:1000]:
+            print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+            #del locals()['name']
+        
+    def base_gen(self, context):
+        scene = context.scene
+        gen_tool = scene.gen_tool
         
         global FILEPATH
-        FILEPATH = self.filepath
-        #print(FILEPATH)
+        #FILEPATH = self.filepath
         
         FILEPATH = FILEPATH.replace("\\", "/")
-        if(len(FILEPATH) > 1):
+        if(len(FILEPATH) > 0):
             # arrays
             imports = []
             parts = []
@@ -70,69 +240,161 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
             x_cons = []
             r_cons = []
             tubes_to_delete = []
-
-            # create collections
-            parts_collection = create_collection("base_parts")
-            parts_collection = get_collection("base_parts")
-            import_collection = create_collection("parts_import")
-            import_collection = get_collection("parts_import")
-
-            # import parts
-
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_Original", link = False)
             
-            tubes = get_objects_including("Tube")
-            imports.append(tubes[0])
-            tubes.clear()
+            if get_collection("parts_import"):
+                pass
+            else:
+                # create collections
+                parts_collection = create_collection("base_parts")
+                parts_collection = get_collection("base_parts")
+                import_collection = create_collection("parts_import")
+                import_collection = get_collection("parts_import")
 
-            
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_Original", link = False)
-            
-            rooms = get_objects_including("Room")
-            imports.append(rooms[len(rooms)-1])
-            rooms.clear()
+                # import parts
+                
+                if gen_tool.import_quality == "LOW_QUALITY":
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_LQ", link = False)
+                    
+                    tubes = get_objects_including("Tube")
+                    imports.append(tubes[0])
+                    tubes.clear()
 
-
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_Original", link = False)
-
-            corners = get_objects_including("Corner")
-            imports.append(corners[0])
-            corners.clear()
-
-
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_Original", link = False)
-
-            x_cons = get_objects_including("XCon")
-            imports.append(x_cons[0])
-            x_cons.clear()
-            
-            
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_Original", link = False)
-
-            r_cons = get_objects_including("RCon")
-            imports.append(r_cons[0])
-            r_cons.clear()
-            
-            
-            
-            bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_Original", link = False)
-
-            t_cons = get_objects_including("TCon")
-            imports.append(t_cons[0])
-            t_cons.clear()
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_LQ", link = False)
+                    
+                    rooms = get_objects_including("Room")
+                    imports.append(rooms[len(rooms)-1])
+                    rooms.clear()
 
 
-            if parts_collection:
-                for i, o in enumerate(imports):
-                    o.name = "part%d" % i
-                    o.to_mesh(preserve_all_data_layers = True)
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_LQ", link = False)
 
-            tube = get_object(imports[0])
-            room = get_object(imports[1])
-            corner = get_object(imports[2])
-            x_con = get_object(imports[3])
-            r_con = get_object(imports[4])
-            t_con = get_object(imports[5])
+                    corners = get_objects_including("Corner")
+                    imports.append(corners[0])
+                    corners.clear()
+
+
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_LQ", link = False)
+
+                    x_cons = get_objects_including("XCon")
+                    imports.append(x_cons[0])
+                    x_cons.clear()
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_LQ", link = False)
+
+                    r_cons = get_objects_including("RCon")
+                    imports.append(r_cons[0])
+                    r_cons.clear()
+                    
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_LQ", link = False)
+
+                    t_cons = get_objects_including("TCon")
+                    imports.append(t_cons[0])
+                    t_cons.clear()
+                    move_objects_to_collection(imports, get_collection("parts_import"))
+                elif gen_tool.import_quality == "HIGH_QUALITY":
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_HQ", link = False)
+                    
+                    tubes = get_objects_including("Tube")
+                    imports.append(tubes[0])
+                    tubes.clear()
+
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_HQ", link = False)
+                    
+                    rooms = get_objects_including("Room")
+                    imports.append(rooms[len(rooms)-1])
+                    rooms.clear()
+
+
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_HQ", link = False)
+
+                    corners = get_objects_including("Corner")
+                    imports.append(corners[0])
+                    corners.clear()
+
+
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_HQ", link = False)
+
+                    x_cons = get_objects_including("XCon")
+                    imports.append(x_cons[0])
+                    x_cons.clear()
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_HQ", link = False)
+
+                    r_cons = get_objects_including("RCon")
+                    imports.append(r_cons[0])
+                    r_cons.clear()
+                    
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_HQ", link = False)
+
+                    t_cons = get_objects_including("TCon")
+                    imports.append(t_cons[0])
+                    t_cons.clear()
+                    move_objects_to_collection(imports, get_collection("parts_import"))
+                    
+                    
+                    
+                elif gen_tool.import_quality == "MEDIUM_QUALITY":
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_HQ", link = False)
+                    
+                    tubes = get_objects_including("Tube")
+                    imports.append(tubes[0])
+                    tubes.clear()
+
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_MQ", link = False)
+                    
+                    rooms = get_objects_including("Room")
+                    imports.append(rooms[len(rooms)-1])
+                    rooms.clear()
+
+
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_MQ", link = False)
+
+                    corners = get_objects_including("Corner")
+                    imports.append(corners[0])
+                    corners.clear()
+
+
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_MQ", link = False)
+
+                    x_cons = get_objects_including("XCon")
+                    imports.append(x_cons[0])
+                    x_cons.clear()
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_MQ", link = False)
+
+                    r_cons = get_objects_including("RCon")
+                    imports.append(r_cons[0])
+                    r_cons.clear()
+                    
+                    
+                    
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_MQ", link = False)
+
+                    t_cons = get_objects_including("TCon")
+                    imports.append(t_cons[0])
+                    t_cons.clear()
+                    move_objects_to_collection(imports, get_collection("parts_import"))
+
+
+            for i, o in enumerate(imports):
+                o.name = "part%d" % i
+                o.to_mesh(preserve_all_data_layers = True)
+            tube = get_object("part0")
+            room = get_object("part1")
+            corner = get_object("part2")
+            x_con = get_object("part3")
+            r_con = get_object("part4")
+            t_con = get_object("part5")
             
             bpy.ops.object.mode_set(mode='EDIT')
             
@@ -214,7 +476,11 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
             
             # instancing objects at points specified in the arrays
 
-
+            tracemalloc.start()
+            
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            
             for t in tubes:
                 new_tube = copy_object(tube)
                 rename_object(new_tube, "tube_instance")
@@ -231,7 +497,10 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                 
                 
                 location(new_tube, t[0])
-
+            
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            
             for r in rooms:
                 new_room = copy_object(room)
                 rename_object(new_room, "room_instance")
@@ -241,28 +510,27 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                 for vert in obj.data.vertices:
                     if vert.co == r[0]:
                         r_cons.append((vert, vert.index))
-                apply_location(new_room)
-                bm1 = bmesh.new()
-                bm2 = bmesh.new()
+                #apply_location(new_room)
                 
-                bm1.from_mesh(new_room.data)
-                bm1.transform(new_room.matrix_world)
-                room_BVH = BVHTree.FromBMesh(bm1)
+
+                def getDistance(obj1, obj2):
+                    return math.sqrt((obj1.location.x - obj2.location.x)**2 + (obj1.location.y-obj2.location.y)**2)
+                
                 for bp in parts:
                     if "tube" in bp.name:
-                        # detect if tubes overlap
-                        bm2.from_mesh(bp.data)
-                        bm2.transform(bp.matrix_world)
-                        part_BVH = BVHTree.FromBMesh(bm2)
-                        inter = room_BVH.overlap(part_BVH)
-                        inter.append(bp)
-                        if len(inter) > 2:
-                            tube_delete = get_object(inter[len(inter)-1])
+                        
+                        distance = getDistance(new_room, bp)
+                        
+                        if distance < 1:
+                            tube_delete = get_object(bp)
                             rename_object(tube_delete, "tube_delete")
+                            print(new_room.name, tube_delete.name)
                             #get rotation of tubes
-                            display_as_bounds(bp)
-                            hide_in_render(bp)
-            
+                            display_as_bounds(tube_delete)
+                            hide_in_render(tube_delete)
+                            del distance
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             for rc in r_cons:
                 new_r_con = copy_object(r_con)
@@ -300,7 +568,8 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                         else:
                             rotate_around_z(-90, new_r_con)
                 
-
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
                 
             for c in corners:
                 new_corner = copy_object(corner)
@@ -336,7 +605,9 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                 
                 location(new_corner, c[0])
 
-
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            
             for tc in t_cons:
                 new_t_con = copy_object(t_con)
                 rename_object(new_t_con, "t_con_instance")
@@ -352,13 +623,12 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                 vert_a = selected_verts[0]
                 vert_b = get_other_vert(vert_a)
                 
-                #print(vert_b)
+                
                 verts_location = []
                 for e in vert_a.link_edges:
                     v_other = e.other_vert(vert_a)
                     verts_location.append(v_other.co-tc[1].co)
-                print(verts_location)
-                    
+                
                 vector_x = 0
                 vector_y = 0
                 
@@ -381,45 +651,91 @@ class OBJECT_OT_subnautica_base_generator(Operator, ImportHelper):
                     
             
 
-
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             for xc in x_cons:
                 new_x_con = copy_object(x_con)
                 rename_object(new_x_con, "x_con_instance")
                 parts.append(new_x_con)
                 location(new_x_con, xc)
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             
-            move_objects_to_collection(parts, parts_collection)
-            move_objects_to_collection(imports, import_collection)
+            for p in parts:
+                bpy.data.collections["base_parts"].objects.link(p)
             
-        return {'FINISHED'}
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"######### Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            bpy.ops.object.mode_set(mode="OBJECT", toggle=False)
+            
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            if gen_tool.auto_parent == True:
+                deselect_all_objects()
+                for bp in parts:
+                    select_object(bp, True)
+                    set_parent(bp, obj)
+            
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            import_collection.hide_viewport = True
+            import_collection.hide_render = True
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            
+            for n in locals():
+                del n
+            del parts
+            del tubes
+            del findAngle
+            del findAngleAbsolute
+            del rotate_to_direction
+            del rotate_to_direction_z
+            del instance_object_new
+            del get_other_vert
+            del getDistance
+            del imports
+            del corners
+            
+            
+            current, peak = tracemalloc.get_traced_memory()
+            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+            tracemalloc.stop()
+            def sizeof_fmt(num, suffix='B'):
+                for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+                    if abs(num) < 1024.0:
+                        return "%3.1f %s%s" % (num, unit, suffix)
+                    num /= 1024.0
+                return "%.1f %s%s" % (num, 'Yi', suffix)
 
-def menu_func(self, context):
-    self.layout.operator(OBJECT_OT_subnautica_base_generator.bl_idname)
+            for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
+                                     key= lambda x: -x[1])[:1000]:
+                print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
+                #del locals()['name']
+                
 
 classes = (
-    OBJECT_OT_subnautica_base_generator,
+    GENProperties,
+    TEST_OT_test_op,
+    TEST_PT_panel,
+    OT_OpenFileBrowser
 )
+
+
 def register():
-    from bpy.utils import register_class
-    #register_class(OT_OpenFilebrowser)
     for cls in classes:
         register_class(cls)
     
-    #bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
-    
-    bpy.types.VIEW3D_MT_object.append(menu_func)
-
+    bpy.types.Scene.gen_tool = PointerProperty(type=GENProperties)
+ 
+ 
 def unregister():
-    from bpy.utils import unregister_class
-    #unregister_class(OT_OpenFilebrowser)
-    for cls in reversed(classes):
+    for cls in classes:
         unregister_class(cls)
-    del bpy.types.Scene.my_tool
-    
-    bpy.types.VIEW3D_MT_object.remove(menu_func)
-
-if __name__ == "__main__":
+    del bpy.types.Scene.gen_tool
+ 
+ 
+if __name__ == '__main__':
     register()
-    
