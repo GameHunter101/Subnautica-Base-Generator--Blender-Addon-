@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Subnautica Base Generator",
     "author": "Lior Carmeli",
-    "version": (1,0),
+    "version": (2,0),
     "blender": (2,93,0),
     "location": "View3D > Object",
     "description": "Generates a Subnautica base from a base mesh",
@@ -207,19 +207,6 @@ class TEST_OT_test_op(Operator):
         
         if gen_tool.auto_base == True:
             self.base_gen(context)
-        
-        
-        def sizeof_fmt(num, suffix='B'):
-            for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-                if abs(num) < 1024.0:
-                    return "%3.1f %s%s" % (num, unit, suffix)
-                num /= 1024.0
-            return "%.1f %s%s" % (num, 'Yi', suffix)
-
-        for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                                 key= lambda x: -x[1])[:1000]:
-            print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
-            #del locals()['name']
         
     def base_gen(self, context):
         scene = context.scene
@@ -443,11 +430,6 @@ class TEST_OT_test_op(Operator):
                 return o
             
             def get_other_vert(v):
-                """for e in bm.edges:
-                    for verts in e.verts:
-                        if verts.index == v.index:
-                            for v.link_edges:
-                                return e.other_vert(v)"""
                 for e in v.link_edges:
                     v_other = e.other_vert(v)
                     return v_other
@@ -476,11 +458,6 @@ class TEST_OT_test_op(Operator):
             
             # instancing objects at points specified in the arrays
 
-            tracemalloc.start()
-            
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-            
             for t in tubes:
                 new_tube = copy_object(tube)
                 rename_object(new_tube, "tube_instance")
@@ -498,8 +475,6 @@ class TEST_OT_test_op(Operator):
                 
                 location(new_tube, t[0])
             
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             
             for r in rooms:
                 new_room = copy_object(room)
@@ -529,8 +504,6 @@ class TEST_OT_test_op(Operator):
                             display_as_bounds(tube_delete)
                             hide_in_render(tube_delete)
                             del distance
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             for rc in r_cons:
                 new_r_con = copy_object(r_con)
@@ -568,8 +541,6 @@ class TEST_OT_test_op(Operator):
                         else:
                             rotate_around_z(-90, new_r_con)
                 
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
                 
             for c in corners:
                 new_corner = copy_object(corner)
@@ -605,8 +576,6 @@ class TEST_OT_test_op(Operator):
                 
                 location(new_corner, c[0])
 
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             
             for tc in t_cons:
                 new_t_con = copy_object(t_con)
@@ -651,40 +620,30 @@ class TEST_OT_test_op(Operator):
                     
             
 
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             for xc in x_cons:
                 new_x_con = copy_object(x_con)
                 rename_object(new_x_con, "x_con_instance")
                 parts.append(new_x_con)
                 location(new_x_con, xc)
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
             
             for p in parts:
                 bpy.data.collections["base_parts"].objects.link(p)
-            
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"######### Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             bpy.ops.object.mode_set(mode="OBJECT", toggle=False)
             
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             if gen_tool.auto_parent == True:
                 deselect_all_objects()
                 for bp in parts:
                     select_object(bp, True)
                     set_parent(bp, obj)
             
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"!!!!!!!! Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             import_collection.hide_viewport = True
             import_collection.hide_render = True
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
             
+            
+            for n in globals():
+                del n
             for n in locals():
                 del n
             del parts
@@ -698,22 +657,6 @@ class TEST_OT_test_op(Operator):
             del getDistance
             del imports
             del corners
-            
-            
-            current, peak = tracemalloc.get_traced_memory()
-            print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-            tracemalloc.stop()
-            def sizeof_fmt(num, suffix='B'):
-                for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-                    if abs(num) < 1024.0:
-                        return "%3.1f %s%s" % (num, unit, suffix)
-                    num /= 1024.0
-                return "%.1f %s%s" % (num, 'Yi', suffix)
-
-            for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                                     key= lambda x: -x[1])[:1000]:
-                print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
-                #del locals()['name']
                 
 
 classes = (
