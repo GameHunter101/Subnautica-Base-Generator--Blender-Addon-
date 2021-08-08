@@ -1,14 +1,12 @@
 # Subnautica-Base-Generator--Blender-Addon-
-Blender Addon That Creates A Base From Videogame "Subnautica" From A Skeleton Mesh
-
-## REQUIRED PACKAGES:
-	EasyBPY ( follow the instructions on https://curtisholt.online/easybpy)
+Blender Addon That Creates A Seabase From A Skeleton Mesh (Inspired By Videogame "Subnautica").
 
 ## HOW TO USE:
 
 ### STEP 1:
 
-	Download "Subnautica_Base_Generator.py" and "subnauticabaseparts.blend". If you want an example of how a skeleton should look like, download "blender addon.blend".
+	Download the repository. "blender addon.blend" is not required, but can be used as an example.
+	Remember to extract everything from the .zip file into a new folder.
 
 ### STEP 2:
 
@@ -21,20 +19,37 @@ Blender Addon That Creates A Base From Videogame "Subnautica" From A Skeleton Me
 
 ### STEP 3:
 
-	Make a new "Plane" object from the "Add" menu.
-	Press the tab key on your keyboard to go into "Edit Mode".
-	Select every vertex by pressing "a" on your keyboard.
-	Press "m" on your keyboard, then select "Collapse" from the menu.
-	Make sure you are in vertex selection mode by pressing "1" on the number row.
-	Start extruding the vertex, but remember that the generator will only work if the edges are exactly one meter long and are at 90 degree angles.
+	Make a new object object from the "Add" menu.
+	Press "n" on your keyboard to open the n-panel.
+	Select the tab that says "Base Gen" on the right side of the 3D viewport.
 
 ### STEP 4:
 
-	Go back into "Object Mode" by pressing the tab key again.
-	Make sure your mesh is selected.
-	In the "Object" menu in the top left, select the option labeled "Generate Base" in the dropdown (It will appear towards the bottom of the dropdown).
-	Navigate to where you downloaded "subnauticabaseparts.blend", select it, and click "Generate Base".
-	The process will take a couple of seconds to complete, depending on the size of the skeleton.
+	Make sure you have an object selected.
+	In the open panel (top right corner of the 3D viewport), click on the button that says "Select Filepath" (The uppermost option in the panel).
+	In the newly opened file browser, browse to where you extracted the .zip file.
+	Select "subnauticabaseparts.blend".
+	Click on the "Get file" button at the bottom of the file browser window.
+
+## IF YOU ALREADY HAVE A SKELETON YOU WOULD LIKE TO USE, GO TO STEP 5. IF NOT, GO TO STEP 6.
+
+### STEP 5:
+
+	In the "Subnautica Base Generator" panel, click on the option labeled "Base Gen" (The second option).
+	The last option in the panel is a dropdown menu. This is where you select the quality of your base, out of three different options. Low, Medium, and High quality.
+	Each quality has its own benefits and drawbacks. Low Quality is the fastest to generate, the fastest to work with, but with the least amount of detail.
+	Medium Quality, the default option, is still pretty fast to generate, fast to work with, and has more detail than Low Quality.
+	High Quality is the slowest to generate, and also used to most memory. Be carefult with this option as it might crash Blender. This option has the most detail.
+	
+### STEP 6:
+
+	In the "Subnautica Base Generator" panel, there is an option to change the size of the generated skeleton. Presets: 20 = small | 50 = medium | 100 = large | 200 = extra large.
+	The last option in the panel is a dropdown menu. This is where you select the quality of your base, out of three different options. Low, Medium, and High quality.
+	Each quality has its own benefits and drawbacks. Low Quality is the fastest to generate, the fastest to work with, but with the least amount of detail.
+	Medium Quality, the default option, is still pretty fast to generate, fast to work with, and has more detail than Low Quality.
+	High Quality is the slowest to generate, and also used to most memory. Be carefult with this option as it might crash Blender. This option has the most detail.
+	One of the options on the panel is called "Automatically Generate Base". This option presses the "Base Gen" button for you right after the skeleton is generated.
+	When you are satisfied with your settings, you can click the "Skel Gen" button (the third option in the panel).
 
 #### Example of a good skeleton:
 ![image](https://user-images.githubusercontent.com/45775235/127783494-8259f98b-e35f-43bb-a223-9170db2ea2d8.png)
