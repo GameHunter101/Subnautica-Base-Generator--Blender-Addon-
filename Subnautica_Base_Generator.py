@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Subnautica Base Generator",
     "author": "Lior Carmeli",
-    "version": (2,0),
+    "version": (2,1),
     "blender": (2,93,0),
     "location": "View3D > Object",
     "description": "Generates a Subnautica base from a base mesh",
@@ -223,10 +223,19 @@ class TEST_OT_test_op(Operator):
             tubes = []
             rooms = []
             corners = []
-            t_cons = []
             x_cons = []
             r_cons = []
+            t_cons = []
             tubes_to_delete = []
+            
+            HQ_Parts_name = ["Tube_HQ", "Room_HQ", "Corner_HQ", "XCon_HQ", "RCon_HQ", "TCon_HQ"]
+            MQ_Parts_name = ["Tube_MQ", "Room_MQ", "Corner_MQ", "XCon_MQ", "RCon_MQ", "TCon_MQ"]
+            LQ_Parts_name = ["Tube_LQ", "Room_LQ", "Corner_LQ", "XCon_LQ", "RCon_LQ", "TCon_LQ"]
+            
+            importlist = [tubes, rooms, corners, x_cons, r_cons, t_cons]
+            
+            import_temp_name = ["Tube", "Room", "Corner", "XCon", "RCon", "TCon"]
+            
             
             if get_collection("parts_import"):
                 pass
@@ -239,138 +248,29 @@ class TEST_OT_test_op(Operator):
 
                 # import parts
                 
+                def import_helper(tempfilename, templist, tempname):
+                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = tempfilename, link = False)
+                    
+                    templist = get_objects_including(tempname)
+                    imports.append(templist[0])
+                    templist.clear()
+                
                 if gen_tool.import_quality == "LOW_QUALITY":
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_LQ", link = False)
-                    
-                    tubes = get_objects_including("Tube")
-                    imports.append(tubes[0])
-                    tubes.clear()
-
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_LQ", link = False)
-                    
-                    rooms = get_objects_including("Room")
-                    imports.append(rooms[len(rooms)-1])
-                    rooms.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_LQ", link = False)
-
-                    corners = get_objects_including("Corner")
-                    imports.append(corners[0])
-                    corners.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_LQ", link = False)
-
-                    x_cons = get_objects_including("XCon")
-                    imports.append(x_cons[0])
-                    x_cons.clear()
                     
                     
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_LQ", link = False)
-
-                    r_cons = get_objects_including("RCon")
-                    imports.append(r_cons[0])
-                    r_cons.clear()
+                    for i in range(len(importlist)):
+                        import_helper(LQ_Parts_name[i], importlist[i], import_temp_name[i])
                     
-                    
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_LQ", link = False)
-
-                    t_cons = get_objects_including("TCon")
-                    imports.append(t_cons[0])
-                    t_cons.clear()
-                    move_objects_to_collection(imports, get_collection("parts_import"))
                 elif gen_tool.import_quality == "HIGH_QUALITY":
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_HQ", link = False)
-                    
-                    tubes = get_objects_including("Tube")
-                    imports.append(tubes[0])
-                    tubes.clear()
-
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_HQ", link = False)
-                    
-                    rooms = get_objects_including("Room")
-                    imports.append(rooms[len(rooms)-1])
-                    rooms.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_HQ", link = False)
-
-                    corners = get_objects_including("Corner")
-                    imports.append(corners[0])
-                    corners.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_HQ", link = False)
-
-                    x_cons = get_objects_including("XCon")
-                    imports.append(x_cons[0])
-                    x_cons.clear()
-                    
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_HQ", link = False)
-
-                    r_cons = get_objects_including("RCon")
-                    imports.append(r_cons[0])
-                    r_cons.clear()
-                    
-                    
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_HQ", link = False)
-
-                    t_cons = get_objects_including("TCon")
-                    imports.append(t_cons[0])
-                    t_cons.clear()
-                    move_objects_to_collection(imports, get_collection("parts_import"))
+                    for i in range(len(importlist)):
+                        import_helper(HQ_Parts_name[i], importlist[i], import_temp_name[i])
                     
                     
                     
                 elif gen_tool.import_quality == "MEDIUM_QUALITY":
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Tube_HQ", link = False)
-                    
-                    tubes = get_objects_including("Tube")
-                    imports.append(tubes[0])
-                    tubes.clear()
-
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Room_MQ", link = False)
-                    
-                    rooms = get_objects_including("Room")
-                    imports.append(rooms[len(rooms)-1])
-                    rooms.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "Corner_MQ", link = False)
-
-                    corners = get_objects_including("Corner")
-                    imports.append(corners[0])
-                    corners.clear()
-
-
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "XCon_MQ", link = False)
-
-                    x_cons = get_objects_including("XCon")
-                    imports.append(x_cons[0])
-                    x_cons.clear()
-                    
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "RCon_MQ", link = False)
-
-                    r_cons = get_objects_including("RCon")
-                    imports.append(r_cons[0])
-                    r_cons.clear()
-                    
-                    
-                    
-                    bpy.ops.wm.append(filepath = "subnauticabaseparts.blend", directory = FILEPATH.strip()+"/Object/".strip(), filename = "TCon_MQ", link = False)
-
-                    t_cons = get_objects_including("TCon")
-                    imports.append(t_cons[0])
-                    t_cons.clear()
-                    move_objects_to_collection(imports, get_collection("parts_import"))
+                    for i in range(len(importlist)):
+                        import_helper(MQ_Parts_name[i], importlist[i], import_temp_name[i])
+                move_objects_to_collection(imports, get_collection("parts_import"))
 
 
             for i, o in enumerate(imports):
@@ -433,6 +333,17 @@ class TEST_OT_test_op(Operator):
                 for e in v.link_edges:
                     v_other = e.other_vert(v)
                     return v_other
+                
+            def instance_helper(orig_obj, new_name, new_location = None):
+                new_obj = copy_object(orig_obj)
+                rename_object(new_obj, new_name)
+                parts.append(new_obj)
+                
+                if new_location != None:
+                    location(new_obj, new_location)
+                
+                return new_obj
+                
 
 
             # appending positions of vertices to proper arrays
@@ -459,10 +370,9 @@ class TEST_OT_test_op(Operator):
             # instancing objects at points specified in the arrays
 
             for t in tubes:
-                new_tube = copy_object(tube)
-                rename_object(new_tube, "tube_instance")
-                new_tube.to_mesh(preserve_all_data_layers=True)
-                parts.append(new_tube)
+                #new_tube = instance_helper(tube, "tube_instance", t[0])
+                
+                new_tube = instance_helper(tube, "tube_instance")
                 dir = t[1]-t[0]
                 
                 angle = 0
@@ -477,14 +387,11 @@ class TEST_OT_test_op(Operator):
             
             
             for r in rooms:
-                new_room = copy_object(room)
-                rename_object(new_room, "room_instance")
-                location(new_room, r[0])
-                parts.append(new_room)
-                #r_cons.append(r[0])
+                new_room = instance_helper(room, "room_instance", r[0])
                 for vert in obj.data.vertices:
-                    if vert.co == r[0]:
-                        r_cons.append((vert, vert.index))
+                    #print(obj.matrix_world @ vert.co, r[0])
+                    if obj.matrix_world @ vert.co == r[0]:
+                        r_cons.append((vert, vert.index, obj.matrix_world @ vert.co))
                 #apply_location(new_room)
                 
 
@@ -499,17 +406,17 @@ class TEST_OT_test_op(Operator):
                         if distance < 1:
                             tube_delete = get_object(bp)
                             rename_object(tube_delete, "tube_delete")
-                            print(new_room.name, tube_delete.name)
+                            #print(new_room.name, tube_delete.name)
                             #get rotation of tubes
                             display_as_bounds(tube_delete)
                             hide_in_render(tube_delete)
-                            del distance
-
+                del distance
+                del getDistance
+            
+            print(r_cons)
+            
             for rc in r_cons:
-                new_r_con = copy_object(r_con)
-                rename_object(new_r_con, "r_con_instance")
-                location(new_r_con, rc[0].co)
-                parts.append(new_r_con)
+                new_r_con = instance_helper(r_con, "r_con_instance", rc[2])
                 deselect_all_objects()
                 select_object(obj)
                 bpy.ops.object.mode_set(mode="EDIT")
@@ -543,10 +450,7 @@ class TEST_OT_test_op(Operator):
                 
                 
             for c in corners:
-                new_corner = copy_object(corner)
-                rename_object(new_corner, "corner_instance")
-                new_corner.to_mesh(preserve_all_data_layers=True)
-                parts.append(new_corner)
+                new_corner = instance_helper(corner, "corner_instance", c[0])
                 
                 
                 linked_verts = []
@@ -578,10 +482,7 @@ class TEST_OT_test_op(Operator):
 
             
             for tc in t_cons:
-                new_t_con = copy_object(t_con)
-                rename_object(new_t_con, "t_con_instance")
-                parts.append(new_t_con)
-                location(new_t_con, tc[0])
+                new_t_con = instance_helper(t_con, "t_con_instance", tc[0])
                 deselect_all_objects()
                 select_object(obj)
                 bpy.ops.object.mode_set(mode="EDIT")
@@ -596,8 +497,7 @@ class TEST_OT_test_op(Operator):
                 verts_location = []
                 for e in vert_a.link_edges:
                     v_other = e.other_vert(vert_a)
-                    verts_location.append(v_other.co-tc[1].co)
-                
+                    verts_location.append(mathutils.Vector((round(v_other.co.x-tc[1].co.x, 0), round(v_other.co.y-tc[1].co.y, 0), round(v_other.co.z-tc[1].co.z, 0))))
                 vector_x = 0
                 vector_y = 0
                 
@@ -622,10 +522,7 @@ class TEST_OT_test_op(Operator):
 
 
             for xc in x_cons:
-                new_x_con = copy_object(x_con)
-                rename_object(new_x_con, "x_con_instance")
-                parts.append(new_x_con)
-                location(new_x_con, xc)
+                new_x_con = instance_helper(x_con, "x_con_instance", xc)
 
             
             for p in parts:
@@ -654,7 +551,6 @@ class TEST_OT_test_op(Operator):
             del rotate_to_direction_z
             del instance_object_new
             del get_other_vert
-            del getDistance
             del imports
             del corners
                 
