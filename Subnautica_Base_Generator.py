@@ -29,7 +29,7 @@ from bpy.props import(
 )
 from bpy_extras.io_utils import ImportHelper
 import bmesh
-from.easybpy import *
+from . easybpy import *
 import mathutils
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
