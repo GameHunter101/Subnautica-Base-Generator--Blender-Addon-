@@ -62,7 +62,7 @@ name = "keyboard"
 
 if name in sys.modules:
     import keyboard
-    from drag_panel_op import DP_OT_draw_operator
+    from .drag_panel_op import DP_OT_draw_operator
 #elif (spec := importlib.util.find_spec(name)) is not None:
 else:
     # If you choose to perform the actual import ...
@@ -75,8 +75,8 @@ else:
     subprocess.call([python_exe, "-m", "pip", "install", name])
 
     import keyboard
-    from drag_panel_op import DP_OT_draw_operator
-from subscribe_func import *
+    from .drag_panel_op import DP_OT_draw_operator
+from .subscribe_func import *
 #import globals
 
 FILEPATH = ""

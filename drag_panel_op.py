@@ -9,8 +9,8 @@ if not dir in sys.path:
 
 from bpy.types import Operator
 
-from bl_ui_button import *
-from subscribe_func import *
+from .bl_ui_button import *
+from .subscribe_func import *
 
 import keyboard
 import globals
