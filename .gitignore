@@ -3,3 +3,13 @@ test.py
 Base_Generator_Part2.py
 blender addon.blend1
 subnauticabaseparts.blend1
+Subnautica_Base_Generator.zip
+Subanutica_base_generator_v3.1.zip
+Subanutica_base_generator_v4.1.zip
+base_gen/__init.py
+base_gen/bl_ui_button.py
+base_gen/bl_ui_widget.py
+base_gen/drag_panel_op.py
+base_gen/easbpy.py
+base_gen/globals.py
+base_gen/subscribe_func.py
